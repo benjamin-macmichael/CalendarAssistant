@@ -31,7 +31,7 @@ Since TherapyAppointment doesn't offer a public API, this agent uses **Playwrigh
 1. **Clone the repository**
 ```bash
 git clone https://github.com/yourusername/calendar-sync-agent.git
-cd calendar-sync-agent
+cd CalendarAssistant
 ```
 
 2. **Install dependencies**
@@ -62,20 +62,20 @@ THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
 - Sign in with the same Google account you use for your personal calendar.
 - This is where you’ll manage access to Google APIs.
 
-## Create a New Project
+### Create a New Project
 
 1. Click the project dropdown at the top → **New Project**.  
 2. Give it a name like **MyCalendarAPI** and click **Create**.  
 3. Once created, make sure it’s selected in the top bar.
 
-## Enable the Google Calendar API
+### Enable the Google Calendar API
 
 1. In the left sidebar, go to **APIs & Services → Library**.  
 2. Search for **Google Calendar API**.  
 3. Click it → **Enable**.  
 4. This activates the Calendar API for your project.
 
-## Set Up the OAuth Consent Screen
+### Set Up the OAuth Consent Screen
 
 1. Go to **APIs & Services → OAuth consent screen**.  
 2. Choose **External** (this just means it’s for any Google account, including your own).  
@@ -86,7 +86,7 @@ THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
 4. Click **Save and Continue** through the *Scopes* and *Test Users* pages (you can leave them blank).  
 5. On the Summary page, click **Back to Dashboard**.
 
-## Create OAuth 2.0 Credentials
+### Create OAuth 2.0 Credentials
 
 1. Go to **APIs & Services → Credentials**.  
 2. Click **+ Create Credentials → OAuth client ID**.  
@@ -94,7 +94,7 @@ THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
 4. Name it something like `CalendarDesktopClient`.  
 5. Click **Create**.
 
-## Download Your Client Secret File
+### Download Your Client Secret File
 
 1. You’ll now see your **Client ID** and **Client Secret**.  
 2. Click **Download JSON**
@@ -102,7 +102,7 @@ THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
 > 💡 This file is what your code uses to authenticate with your Google account.
 Once you’ve done this, you’re ready to use the `credentials.json` file in your code to authenticate and read calendar events.
 
-## Add your email to test users
+### Add your email to test users
 
 1. Go to "API & Services" and then select "OAuth Consent Screen" from the left menu
 2. Click "Audience" in the new tab that appears on the left
