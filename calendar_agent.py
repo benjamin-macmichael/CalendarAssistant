@@ -36,11 +36,12 @@ class CalendarSyncAgent:
         
         # System message to guide the LLM
         self.conversation_history.append({
-            'role': 'system',
-            'content': '''You are a helpful AI assistant that helps therapists manage their calendars.
-You can sync Google Calendar events to TherapyAppointment to prevent double-bookings.
-Be friendly, professional, and concise in your responses.'''
-        })
+        'role': 'system',
+        'content': '''You are a helpful AI assistant that helps therapists manage their calendars.
+    You can sync Google Calendar events to TherapyAppointment to prevent double-bookings.
+    When syncing calendars, just confirm how many events were blocked. Don't make up appointment details or times.
+    Be concise and factual.'''
+    })
         
     async def chat(self, user_message: str) -> str:
         """Main chat interface with function calling capability"""

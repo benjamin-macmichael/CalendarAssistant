@@ -109,6 +109,12 @@ Once you’ve done this, you’re ready to use the `credentials.json` file in yo
 3. Scroll down to Test Users and select "Add users"
 4. Type in your email and hit Save
 
+### Publish App so your credentials last longer than 7 days
+
+1. Go to "API & Services" and then select "OAuth Consent Screen" from the left menu
+2. Click "Audience" in the new tab that appears on the left
+3. Near the top of the page under "Publishing Status" click the button to publish your app
+
 ## Usage
 
 Run the agent:
