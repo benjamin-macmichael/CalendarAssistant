@@ -422,11 +422,51 @@ class TherapyAppointmentAutomation:
             start_time_str = start_dt.strftime('%H:%M')  # 24-hour format
             end_time_str = end_dt.strftime('%H:%M')
             
-            # Step 4: Click correct day
+            # Step 4: Navigate calendar to correct month and click day
             print(f"   Filling date: {date_str}")
             await page.click('#event_date')  # open calendar popup
-            day_selector = f'text="{start_dt.day}"'
+            await asyncio.sleep(1)
+            
+            # Navigate to the correct month
+            target_month = start_dt.month
+            target_year = start_dt.year
+            
+            # Keep clicking next/previous until we're in the right month
+            max_attempts = 24  # Prevent infinite loop
+            for _ in range(max_attempts):
+                try:
+                    # Get the currently displayed month/year from the datepicker
+                    combined = await page.text_content('th.datepicker-switch')
+                    # Example: "October 2025" or "November 2024"
+                    
+                    parts = combined.split()
+                    month_name = parts[0]  # "October"
+                    current_year = int(parts[1])  # 2025
+                    
+                    # Convert month name to number (e.g., "November" -> 11)
+                    from datetime import datetime as dt
+                    current_month = dt.strptime(month_name, '%B').month
+                    
+                    if current_year == target_year and current_month == target_month:
+                        break  # We're in the right month!
+                    elif (current_year < target_year) or (current_year == target_year and current_month < target_month):
+                        # Need to go forward
+                        await page.click('th.next')
+                    else:
+                        # Need to go backward
+                        await page.click('th.prev')
+                    
+                    await asyncio.sleep(0.5)
+                    
+                except Exception as e:
+                    print(f"   Warning: Could not navigate calendar: {e}")
+                    print(f"   You may need to update the calendar selectors")
+                    break
+            
+            # Now click the day
+            day_selector = f'td.day:not(.old):not(.new):has-text("{start_dt.day}")'
             await page.click(day_selector)
+            await asyncio.sleep(1)
             
             # Step 5: Set start time
             print(f"   Filling start time: {start_time_str}")
