@@ -142,9 +142,7 @@ You: Sync my calendar for the next week
    ✓ Blocked successfully
 ...
 
-🤖 Agent: Done! I've blocked 5 time slots in TherapyAppointment to match 
-         your Google Calendar. Your clients won't be able to book during 
-         those times.
+🤖 Agent: Done! Next week's calendar has been synced with TherapyAppointment.
 ```
 
 ## Project Structure
@@ -220,7 +218,6 @@ Playwright controls a real browser to:
 ### 3. Smart Syncing
 - Only syncs time-based events (skips all-day events)
 - Customizable sync window (default: 7 days ahead)
-- Prevents double-bookings automatically
 - Maintains event privacy (only blocks times, not details)
 
 ## Configuration Options
@@ -231,10 +228,7 @@ Playwright controls a real browser to:
 # Required
 THERAPY_APPOINTMENT_EMAIL=your_email@example.com
 THERAPY_APPOINTMENT_PASSWORD=your_password
-
-# Optional
 THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
-OLLAMA_MODEL=llama3.1
 ```
 
 ### Customization
@@ -242,18 +236,6 @@ OLLAMA_MODEL=llama3.1
 **Change sync window:**
 ```
 You: Sync my calendar for the next 14 days
-```
-
-**Change Ollama model:**
-Edit `calendar_agent.py`:
-```python
-agent = CalendarSyncAgent(model_name="mistral")
-```
-
-**Run browser in headless mode:**
-Edit line in `TherapyAppointmentAutomation.block_multiple_times()`:
-```python
-browser = await p.chromium.launch(headless=True)  # Change to True
 ```
 
 ## Troubleshooting
@@ -280,36 +262,6 @@ ollama pull llama3.1
 **"Permission denied"**
 - Delete `token.pickle` and re-authenticate
 - Make sure Calendar API is enabled in Google Cloud
-
-### Playwright Issues
-
-**"Browser not found"**
-```bash
-playwright install
-```
-
-**"Element not found" or "Timeout"**
-- You need to update the selectors for TherapyAppointment
-- See [PLAYWRIGHT_SETUP.md](PLAYWRIGHT_SETUP.md) for detailed guide
-- Use `PWDEBUG=1 python calendar_agent.py` to debug
-
-**"Login failed"**
-- Verify credentials in `.env` file
-- Check if TherapyAppointment changed their login page
-- Update selectors in `_login()` method
-
-### TherapyAppointment Issues
-
-**"Can't find availability page"**
-- Login manually and note the URL structure
-- Update `_navigate_to_availability()` method with correct URL/selectors
-
-**"Times not blocking"**
-- Inspect the form fields in TherapyAppointment
-- Update selectors in `_block_time_slot()` method
-- Check if date/time format matches what TherapyAppointment expects
-
-## Development
 
 ### Running in Debug Mode
 
@@ -344,66 +296,6 @@ Then implement the function in the `CalendarSyncAgent` class.
 - [ ] 🔔 **Proactive Notifications** - Alert when conflicts detected
 - [ ] ⏰ **Scheduled Syncs** - Auto-sync every hour
 - [ ] 📱 **Web Interface** - Replace CLI with web UI
-- [ ] 🎯 **Smart Filtering** - Ignore certain calendar types
-- [ ] 🔄 **Bi-directional Sync** - Sync TherapyAppointment → Google Calendar
-- [ ] 📧 **Email Summaries** - Daily sync reports
-- [ ] 🤖 **More AI Features** - Suggest optimal scheduling times
-
-## Security & Privacy
-
-### Data Handling
-- ✅ Event details stay private (only times are synced)
-- ✅ Credentials stored in `.env` (not in code)
-- ✅ Google tokens stored locally (`token.pickle`)
-- ✅ Browser sessions are temporary
-
-### Best Practices
-- 🔒 Never commit `.env` file
-- 🔒 Use environment variables for secrets
-- 🔒 Regularly rotate passwords
-- 🔒 Review TherapyAppointment's Terms of Service
-- 🔒 Keep dependencies updated
-
-### HIPAA Compliance
-If handling PHI (Protected Health Information):
-- Ensure encrypted connections (HTTPS)
-- Log access appropriately
-- Consider data retention policies
-- Consult with legal/compliance team
-
-## Contributing
-
-This is a class project, but contributions are welcome!
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## Academic Context
-
-**Course:** Agentic AI Class  
-**Objective:** Build an AI agent that autonomously manages tasks  
-**Challenge:** Work with platforms that lack APIs  
-**Solution:** Browser automation + LLM decision-making  
-
-This project demonstrates:
-- Real-world problem solving
-- Integration of multiple technologies
-- Agentic behavior (autonomous goal achievement)
-- Practical AI applications
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Acknowledgments
-
-- **Course Instructor:** [Name]
-- **Client:** Independent Therapist Practice
-- **Technologies:** Ollama, Playwright, Google Calendar API
-- **Inspiration:** Making therapists' lives easier!
 
 ## Resources
 
@@ -413,7 +305,3 @@ MIT License - See LICENSE file for details
 - [Function Calling with LLMs](https://docs.ollama.ai/api#function-calling)
 
 ---
-
-Made with ❤️ for therapists who deserve better tools
-
-**Star ⭐ this repo if it helped you!**
