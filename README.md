@@ -142,55 +142,13 @@ calendarassistant/
 └── README.md
 ```
 
-## How It Works
-
-```
-┌─────────────┐
-│   Therapist │
-│   Types:    │
-│"Sync my cal"│
-└──────┬──────┘
-       │
-       v
-┌──────────────────┐
-│  Ollama LLM      │
-│  (llama3.1)      │
-│  Understands     │
-│  Intent          │
-└──────┬───────────┘
-       │
-       v
-┌──────────────────┐
-│ Function Calling │
-│ Triggers:        │
-│ sync_calendars() │
-└──────┬───────────┘
-       │
-       ├───────────────────┐
-       v                   v
-┌──────────────┐    ┌──────────────────┐
-│Google Calendar│    │  Playwright      │
-│     API       │    │  Browser         │
-│Get events     │    │  Automation      │
-└──────┬────────┘    └──────┬───────────┘
-       │                    │
-       │                    v
-       │             ┌──────────────────┐
-       │             │TherapyAppointment│
-       │             │  Web Interface   │
-       │             │  Block times     │
-       └─────────────►──────────────────┘
-                     
-                Result: Calendar Synced! ✅
-```
-
 ## Key Features Explained
 
 ### 1. 1. AI-Powered Interaction
 The LLM (Ollama) understands natural language and decides when to call functions:
 - "Sync my calendar" → Calls sync_calendars()
 - "What's on my calendar tomorrow?" → Calls get_upcoming_events()
-- "Tell me about therapy" → Just responds conversationally (no function call)
+- "Tell me about therapy modalities" → Just responds conversationally (no function call)
 - The agent intelligently knows when to use tools vs. when to just chat
 
 ### 2. Browser Automation
@@ -217,19 +175,12 @@ THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
 ```
 
 ### Model Selection
-The default model is llama3.2:3b which uses only ~2GB of RAM. You can change it in calendar_agent.py:
+The default model is llama3.2:3b which uses only ~2GB of RAM. You can change it in calendar_agent.py
 Recommended models:
 
-llama3.2:3b - Smallest, fastest, good for function calling (~2GB)
-llama3.1:8b - More capable, needs more memory (~4.7GB)
-mistral - Alternative, good at function calling (~4.5GB)
-
-### Customization
-
-**Change sync window:**
-```
-You: Sync my calendar for the next 14 days
-```
+- llama3.2:3b - Smallest, fastest, good for function calling (~2GB)
+- llama3.1:8b - More capable, needs more memory (~4.7GB)
+- mistral - Alternative, good at function calling (~4.5GB)
 
 ## Troubleshooting
 
@@ -243,7 +194,7 @@ ollama serve
 
 **"Model not found"**
 ```bash
-ollama pull llama3.1
+ollama pull llama3.2:3b
 ```
 
 ### Google Calendar Issues
@@ -285,21 +236,15 @@ Then implement the function in the `CalendarSyncAgent` class.
 
 ### Dependencies
 Key packages (see requirements.txt for complete list):
-ollama
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
-playwright
-python-dotenv
-streamlit
-nest-asyncio
 
-## Future Enhancements
-
-- [ ] 📊 **Analytics Dashboard** - "Show me booking trends this month"
-- [ ] 🔔 **Proactive Notifications** - Alert when conflicts detected
-- [ ] ⏰ **Scheduled Syncs** - Auto-sync every hour
-- [ ] 📱 **Web Interface** - Replace CLI with web UI
+- ollama
+- google-auth-oauthlib
+- google-auth-httplib2
+- google-api-python-client
+- playwright
+- python-dotenv
+- streamlit
+- nest-asyncio
 
 ## Resources
 
