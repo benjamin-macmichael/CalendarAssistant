@@ -123,39 +123,10 @@ streamlit run streamlit_app.py
 ```
 
 This will automatically open your browser to http://localhost:8501 with a modern chat interface.
-![Chat Interface Example]
 
 Type naturally: "Sync my calendar for the next week"
 Use quick action buttons in the sidebar
 See real-time progress as events are synced
-
-### Alternatively, run the command-line version:
-```bash
-python calendar_agent.py
-```
-
-Chat naturally with the AI:
-```
-You: Sync my calendar for the next week
-
-🤖 Agent: I'll sync your Google Calendar with TherapyAppointment now.
-         Let me check your upcoming events...
-         
-🤖 Executing: sync_calendars
-📅 Fetching events from Google Calendar...
-✓ Found 5 events to sync
-🌐 Opening TherapyAppointment...
-🔐 Logging in...
-✓ Login successful
-📅 Navigating to calendar settings...
-⏰ Blocking: Team Meeting (2024-10-21T09:00:00 - 2024-10-21T10:00:00)
-   ✓ Blocked successfully
-⏰ Blocking: Dentist (2024-10-22T14:00:00 - 2024-10-22T15:00:00)
-   ✓ Blocked successfully
-...
-
-🤖 Agent: Done! Next week's calendar has been synced with TherapyAppointment.
-```
 
 ## Project Structure
 
