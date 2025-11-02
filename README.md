@@ -124,9 +124,9 @@ streamlit run streamlit_app.py
 
 This will automatically open your browser to http://localhost:8501 with a modern chat interface.
 
--Type naturally: "Sync my calendar for the next week"
--Use quick action buttons in the sidebar
--See real-time progress as events are synced
+- Type naturally: "Sync my calendar for the next week"
+- Use quick action buttons in the sidebar
+- See real-time progress as events are synced
 
 ## Project Structure
 
