@@ -28,7 +28,7 @@ load_dotenv()
 class CalendarSyncAgent:
     """AI Agent that syncs calendars using LLM for natural language interaction"""
     
-    def __init__(self, model_name="llama3.1"):
+    def __init__(self, model_name="llama3.2:3b"): #only uses 2GB of memory, good for testing, we can update to a bigger model later
         self.model_name = model_name
         self.google_calendar = GoogleCalendarService()
         self.therapy_appointment = None  # Will be initialized when needed
@@ -36,12 +36,24 @@ class CalendarSyncAgent:
         
         # System message to guide the LLM
         self.conversation_history.append({
-        'role': 'system',
-        'content': '''You are a helpful AI assistant that helps therapists manage their calendars.
-    You can sync Google Calendar events to TherapyAppointment to prevent double-bookings.
-    When syncing calendars, just confirm how many events were blocked. Don't make up appointment details or times.
-    Be concise and factual.'''
-    })
+            'role': 'system',
+            'content': '''You are a helpful AI assistant that helps therapists manage their calendars.
+
+        You have access to these tools:
+        - sync_calendars: Blocks Google Calendar events on TherapyAppointment to prevent double-bookings
+        - get_upcoming_events: Shows what's on the Google Calendar
+
+        ONLY use these tools when the user explicitly asks about:
+        - Syncing/blocking calendar times
+        - Viewing their calendar events
+        - Checking their schedule
+
+        For general questions, advice, or casual conversation, just respond normally WITHOUT using any tools.
+
+        When you do sync calendars, the times are automatically blocked on TherapyAppointment. Just confirm how many events were blocked.
+
+        Be concise and factual. Don't make up details about appointments.'''
+        })
         
     async def chat(self, user_message: str) -> str:
         """Main chat interface with function calling capability"""
@@ -527,5 +539,8 @@ async def main():
         print(f"\n🤖 Agent: {response}\n")
 
 
+# Only run command-line interface if called directly
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Uncomment the line below if you want to use command line
+    #asyncio.run(main())
+    pass

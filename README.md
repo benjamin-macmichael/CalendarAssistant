@@ -43,7 +43,7 @@ playwright install
 3. **Install and setup Ollama**
 ```bash
 # Download from https://ollama.com
-ollama pull llama3.1
+ollama pull llama3.2:3b
 ```
 
 4. **Configure credentials**
@@ -117,7 +117,19 @@ Once you’ve done this, you’re ready to use the `credentials.json` file in yo
 
 ## Usage
 
-Run the agent:
+Run the Streamlit web app:
+```bash
+streamlit run streamlit_app.py
+```
+
+This will automatically open your browser to http://localhost:8501 with a modern chat interface.
+![Chat Interface Example]
+
+Type naturally: "Sync my calendar for the next week"
+Use quick action buttons in the sidebar
+See real-time progress as events are synced
+
+### Alternatively, run the command-line version:
 ```bash
 python calendar_agent.py
 ```
@@ -148,8 +160,9 @@ You: Sync my calendar for the next week
 ## Project Structure
 
 ```
-calendar-sync-agent/
+calendarassistant/
 ├── calendar_agent.py          # Main agent with Playwright automation
+├── streamlit_app.py          # Web UI interface
 ├── requirements.txt           # Python dependencies
 ├── .env                       # Your credentials (create this)
 ├── credentials.json          # Google OAuth (download this)
@@ -202,11 +215,12 @@ calendar-sync-agent/
 
 ## Key Features Explained
 
-### 1. AI-Powered Interaction
+### 1. 1. AI-Powered Interaction
 The LLM (Ollama) understands natural language and decides when to call functions:
-- "Sync my calendar" → Calls `sync_calendars()`
-- "What's on my calendar tomorrow?" → Calls `get_upcoming_events()`
-- Can be extended with more functions
+- "Sync my calendar" → Calls sync_calendars()
+- "What's on my calendar tomorrow?" → Calls get_upcoming_events()
+- "Tell me about therapy" → Just responds conversationally (no function call)
+- The agent intelligently knows when to use tools vs. when to just chat
 
 ### 2. Browser Automation
 Playwright controls a real browser to:
@@ -230,6 +244,14 @@ THERAPY_APPOINTMENT_EMAIL=your_email@example.com
 THERAPY_APPOINTMENT_PASSWORD=your_password
 THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
 ```
+
+### Model Selection
+The default model is llama3.2:3b which uses only ~2GB of RAM. You can change it in calendar_agent.py:
+Recommended models:
+
+llama3.2:3b - Smallest, fastest, good for function calling (~2GB)
+llama3.1:8b - More capable, needs more memory (~4.7GB)
+mistral - Alternative, good at function calling (~4.5GB)
 
 ### Customization
 
@@ -289,6 +311,17 @@ To add new capabilities (e.g., analytics), add to the `tools` list in `chat()`:
 ```
 
 Then implement the function in the `CalendarSyncAgent` class.
+
+### Dependencies
+Key packages (see requirements.txt for complete list):
+ollama
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+playwright
+python-dotenv
+streamlit
+nest-asyncio
 
 ## Future Enhancements
 
