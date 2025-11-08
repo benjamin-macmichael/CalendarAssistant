@@ -6,6 +6,7 @@ An AI-powered chatbot that syncs Google Calendar with TherapyAppointment using b
 import json
 import os
 from datetime import datetime, timedelta
+import datetime as dt
 from typing import List, Dict
 import asyncio
 
@@ -28,7 +29,7 @@ load_dotenv()
 class CalendarSyncAgent:
     """AI Agent that syncs calendars using LLM for natural language interaction"""
     
-    def __init__(self, model_name="llama3.2:3b"): #only uses 2GB of memory, good for testing, we can update to a bigger model later
+    def __init__(self, model_name="llama3.1"): #llama3.2:3b will only use 2GB of memory, good for testing, we can update to a bigger model later
         self.model_name = model_name
         self.google_calendar = GoogleCalendarService()
         self.therapy_appointment = None  # Will be initialized when needed
@@ -261,13 +262,14 @@ class GoogleCalendarService:
         if not self.service:
             return []
         
-        now = datetime.utcnow()
+        now = dt.datetime.now(dt.timezone.utc)
         end_time = now + timedelta(days=days_ahead)
         
+        # FIX: Use isoformat() without adding 'Z' manually
         events_result = self.service.events().list(
             calendarId='primary',
-            timeMin=now.isoformat() + 'Z',
-            timeMax=end_time.isoformat() + 'Z',
+            timeMin=now.isoformat(),      # REMOVED the + 'Z'
+            timeMax=end_time.isoformat(), # REMOVED the + 'Z'
             singleEvents=True,
             orderBy='startTime'
         ).execute()
