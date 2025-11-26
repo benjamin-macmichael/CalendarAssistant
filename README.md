@@ -1,6 +1,6 @@
 # Calendar Sync AI Agent 🤖📅
 
-An AI-powered chatbot that helps therapists sync their Google Calendar with TherapyAppointment using browser automation, automatically blocking out busy times so clients can't double-book.
+An AI-powered chatbot that helps therapists sync their Outlook, Google, and TherapyAppointment calendars.
 
 ## 🎯 Project Overview
 
@@ -25,6 +25,7 @@ Since TherapyAppointment doesn't offer a public API, this agent uses **Playwrigh
 - Ollama installed
 - TherapyAppointment account
 - Google Calendar
+- Outlook Calendar
 
 ### Installation
 
@@ -55,6 +56,9 @@ Edit `.env` with your credentials:
 THERAPY_APPOINTMENT_EMAIL=your_email@example.com
 THERAPY_APPOINTMENT_PASSWORD=your_password
 THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
+
+OUTLOOK_CLIENT_ID=your_client_id
+OUTLOOK_TENANT_ID=common  
 ```
 
 5. **Setup Google Calendar API**
@@ -114,6 +118,69 @@ Once you’ve done this, you’re ready to use the `credentials.json` file in yo
 1. Go to "API & Services" and then select "OAuth Consent Screen" from the left menu
 2. Click "Audience" in the new tab that appears on the left
 3. Near the top of the page under "Publishing Status" click the button to publish your app
+
+# Azure AD App Registration
+
+To access Outlook Calendar, you need to register an application in Azure Active Directory.
+
+---
+
+## **Step 1: Register Application**
+
+1. Go to **Azure Portal**
+2. Navigate to **Azure Active Directory → App registrations**
+3. Click **New registration**
+4. Fill in:
+   - **Name:** "Calendar Sync Agent" (or any name you prefer)
+   - **Supported account types:** "Accounts in any organizational directory and personal Microsoft accounts"
+   - **Redirect URI:** Leave blank for now
+5. Click **Register**
+
+---
+
+## **Step 2: Get Application IDs**
+
+After registration, you'll see the application overview:
+
+- Copy the **Application (client) ID**
+
+Save this — you'll need them for your `.env` file.
+
+---
+
+## **Step 3: Create Client Secret**
+
+1. In your app registration, go to **Certificates & secrets**
+2. Click **New client secret**
+3. Add a description (e.g., "Calendar Sync Secret")
+4. Choose an expiration period (recommend **24 months**)
+5. Click **Add**
+6. **IMPORTANT:** Copy the **secret VALUE** immediately (it won't be shown again!)
+
+---
+
+## **Step 4: Configure API Permissions**
+
+1. Go to **API permissions** in your app registration
+2. Click **Add a permission**
+3. Select **Microsoft Graph**
+4. Select **Delegated permissions**
+5. Add these permissions:
+   - `Calendars.Read`
+   - `Calendars.ReadWrite` (if you want to create events in Outlook too)
+   - `User.Read`
+6. Click **Add permissions**
+7. Click **Grant admin consent** (if you have admin rights) or ask your admin
+
+---
+
+## **Step 5: Enable Device Code Flow**
+
+1. Go to **Authentication** in your app registration
+2. Under **Advanced settings → Allow public client flows**
+3. Set **Enable the following mobile and desktop flows** to **Yes**
+4. Click **Save**
+
 
 ## Usage
 
@@ -245,6 +312,8 @@ Key packages (see requirements.txt for complete list):
 - python-dotenv
 - streamlit
 - nest-asyncio
+- msal
+- requests
 
 ## Resources
 
