@@ -181,6 +181,16 @@ Save this — you'll need them for your `.env` file.
 3. Set **Enable the following mobile and desktop flows** to **Yes**
 4. Click **Save**
 
+---
+
+## **Step 6: Update .env**
+
+1. Add the following to your .env file
+# Outlook/Microsoft 365 Configuration
+OUTLOOK_CLIENT_ID=your_client_id
+OUTLOOK_CLIENT_SECRET=your_client_secret
+OUTLOOK_TENANT_ID=common  
+
 
 ## Usage
 
