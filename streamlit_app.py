@@ -24,6 +24,11 @@ st.set_page_config(
 # Custom CSS
 st.markdown("""
 <style>
+    /* Hide the deploy button */
+    [data-testid="stToolbar"] {
+        display: none;
+    }
+            
     .stChatMessage {
         padding: 1rem;
         border-radius: 0.5rem;
@@ -94,7 +99,7 @@ def check_environment():
     """Check if required environment variables are set"""
     configs = {
         'outlook': {
-            'vars': ['OUTLOOK_CLIENT_ID', 'OUTLOOK_CLIENT_SECRET'],
+            'vars': ['OUTLOOK_CLIENT_ID'],
             'name': 'Outlook Calendar'
         },
         'google': {
