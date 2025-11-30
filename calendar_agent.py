@@ -273,11 +273,25 @@ IMPORTANT RULES:
             
             event_list = []
             for event in events:
+                # Parse the ISO time strings and convert to local time
+                start_dt = datetime.fromisoformat(event['start'])
+                end_dt = datetime.fromisoformat(event['end'])
+                
+                # If timezone-aware, convert to local; if naive, assume UTC
+                if start_dt.tzinfo is None:
+                    start_dt = start_dt.replace(tzinfo=dt.timezone.utc)
+                if end_dt.tzinfo is None:
+                    end_dt = end_dt.replace(tzinfo=dt.timezone.utc)
+                
+                # Convert to local timezone
+                local_start = start_dt.astimezone()
+                local_end = end_dt.astimezone()
+                
                 event_list.append({
                     'summary': event['subject'],
-                    'start': event['start_formatted'],
-                    'end': event['end_formatted'],
-                    'duration': f"{event['duration_minutes']} minutes"
+                    'start': local_start.strftime('%B %d, %Y at %I:%M %p'),
+                    'end': local_end.strftime('%I:%M %p'),
+                    'duration': f"{int((end_dt - start_dt).total_seconds() / 60)} minutes"
                 })
             
             return {
