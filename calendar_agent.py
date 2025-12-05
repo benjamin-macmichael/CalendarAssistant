@@ -515,8 +515,9 @@ class CalendarSyncAgentWithHITL:
             agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
             verbose=True,
             handle_parsing_errors=True,
-            max_iterations=3,  # Reduced to prevent loops
+            max_iterations=3,
             early_stopping_method="generate",
+            return_intermediate_steps=True,  # Enable intermediate steps
             agent_kwargs={
                 "prefix": """You are a helpful calendar management AI assistant for therapists.
 
@@ -550,13 +551,21 @@ You have access to the following tools:"""
                 if not selected_events:
                     return "No events selected or sync cancelled."
                 
-                # Sync the events directly
+                # Sync the events directly - USE AWAIT
                 self.therapy_automation = TherapyAppointmentAutomation()
                 blocked_count = await self.therapy_automation.block_multiple_times(selected_events)
                 return f"✅ Successfully blocked {blocked_count} out of {len(selected_events)} events on TherapyAppointment"
             else:
                 # Normal agent invocation
                 result = self.agent.invoke({"input": user_message})
+                
+                # Check intermediate steps for approval request
+                if 'intermediate_steps' in result:
+                    for action, observation in result['intermediate_steps']:
+                        if action.tool == 'request_sync_approval':
+                            # Return the observation (the list) instead of final answer
+                            return observation
+                
                 return result['output']
         except Exception as e:
             return f"Error: {str(e)}"

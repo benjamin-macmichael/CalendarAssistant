@@ -187,10 +187,6 @@ if st.session_state.show_welcome and not st.session_state.messages:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        
-        # Highlight HITL approval requests
-        if message["role"] == "assistant" and "Which events would you like me to block" in message["content"]:
-            st.session_state.awaiting_selection = True
 
 # Chat input
 if prompt := st.chat_input("Message Calendar Sync Agent..."):
@@ -213,11 +209,11 @@ if prompt := st.chat_input("Message Calendar Sync Agent..."):
                         st.markdown(response)
                         st.session_state.messages.append({"role": "assistant", "content": response})
                         
-                        # Check if this is an approval request
-                        if "Which events would you like me to block" in response:
+                        # Check if this contains the approval request
+                        if "📋" in response or "Which events would you like me to block" in response:
                             st.session_state.awaiting_selection = True
-                        elif st.session_state.awaiting_selection:
-                            # User just responded to selection
+                        elif st.session_state.awaiting_selection and ("Successfully blocked" in response or "cancelled" in response or "No events selected" in response):
+                            # Sync completed or cancelled
                             st.session_state.awaiting_selection = False
                     else:
                         error_msg = "Unable to process request."
@@ -292,7 +288,7 @@ with st.sidebar:
                 response = run_async(st.session_state.agent.chat(prompt))
                 if response:
                     st.session_state.messages.append({"role": "assistant", "content": response})
-                    if "Which events would you like me to block" in response:
+                    if "📋" in response or "Which events would you like me to block" in response:
                         st.session_state.awaiting_selection = True
             except Exception as e:
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {str(e)}"})
@@ -356,7 +352,7 @@ with st.sidebar:
         - `ChatOllama` - Local LLM (Llama 3.1)
         - `AgentExecutor` - Tool orchestration
         - `StructuredTool` - Type-safe tools
-        - No external memory needed (Streamlit handles chat history)
+        - Manual HITL state management
         
         ✅ **Human-in-the-Loop**
         - Custom middleware
@@ -376,7 +372,7 @@ with st.sidebar:
         1. **Single-agent pattern** - One intelligent agent with multiple tools
         2. **Tool orchestration** - Perfect for API integrations
         3. **Memory management** - Built-in conversation history
-        4. **HITL support** - Easy to implement approval workflows
+        4. **HITL support** - Manual state tracking for approval workflows
         
         **CrewAI** would be overkill:
         - Designed for multi-agent collaboration
