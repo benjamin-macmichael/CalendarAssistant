@@ -1,12 +1,12 @@
 """
-Streamlit Web Interface for Multi-Calendar Sync AI Agent
+Streamlit Web Interface for LangChain Calendar Sync Agent with HITL
 Run: streamlit run streamlit_app.py
 """
 
 import streamlit as st
 import asyncio
 import sys
-from calendar_agent import CalendarSyncAgent
+from calendar_agent import CalendarSyncAgentWithHITL
 import os
 
 # Ensure proper event loop policy for Windows
@@ -28,7 +28,7 @@ st.markdown("""
     [data-testid="stToolbar"] {
         display: none;
     }
-            
+    
     .stChatMessage {
         padding: 1rem;
         border-radius: 0.5rem;
@@ -62,13 +62,11 @@ st.markdown("""
         color: white;
     }
     
-    .sync-flow {
-        padding: 1rem;
-        background: linear-gradient(90deg, #0078d4 0%, #4285f4 50%, #10b981 100%);
+    .hitl-box {
+        background-color: #fef3c7;
+        border: 2px solid #f59e0b;
         border-radius: 0.5rem;
-        color: white;
-        text-align: center;
-        font-weight: 600;
+        padding: 1rem;
         margin: 1rem 0;
     }
 </style>
@@ -97,53 +95,24 @@ def run_async(coro):
 
 def check_environment():
     """Check if required environment variables are set"""
-    configs = {
-        'outlook': {
-            'vars': ['OUTLOOK_CLIENT_ID'],
-            'name': 'Outlook Calendar'
-        },
-        'google': {
-            'vars': ['credentials.json'],  # File check
-            'name': 'Google Calendar'
-        },
-        'therapy': {
-            'vars': ['THERAPY_APPOINTMENT_EMAIL', 'THERAPY_APPOINTMENT_PASSWORD'],
-            'name': 'TherapyAppointment'
-        }
+    status = {
+        'outlook': bool(os.getenv('OUTLOOK_CLIENT_ID')),
+        'google': os.path.exists('credentials.json'),
+        'therapy': bool(os.getenv('THERAPY_APPOINTMENT_EMAIL') and os.getenv('THERAPY_APPOINTMENT_PASSWORD'))
     }
-    
-    status = {}
-    
-    # Check Outlook
-    outlook_configured = all(os.getenv(var) for var in configs['outlook']['vars'])
-    status['outlook'] = outlook_configured
-    
-    # Check Google
-    google_configured = os.path.exists('credentials.json')
-    status['google'] = google_configured
-    
-    # Check TherapyAppointment
-    therapy_configured = all(os.getenv(var) for var in configs['therapy']['vars'])
-    status['therapy'] = therapy_configured
-    
     return status
 
 
 def initialize_agent():
     """Initialize the agent with error handling"""
     try:
-        return CalendarSyncAgent()
+        return CalendarSyncAgentWithHITL()
     except FileNotFoundError as e:
         st.error(f"⚠️ Configuration Error: {str(e)}")
         return None
     except ValueError as e:
         st.warning(f"⚠️ Partial Configuration: {str(e)}")
-        st.info("💡 Some features may be limited. Check sidebar for details.")
-        # Try to create agent anyway for basic functionality
-        try:
-            return CalendarSyncAgent()
-        except:
-            return None
+        return None
     except Exception as e:
         st.error(f"⚠️ Error initializing agent: {str(e)}")
         return None
@@ -159,9 +128,14 @@ if "messages" not in st.session_state:
 if "show_welcome" not in st.session_state:
     st.session_state.show_welcome = True
 
+if "awaiting_selection" not in st.session_state:
+    st.session_state.awaiting_selection = False
+
 
 # Header with calendar badges
 st.title("📅 Multi-Calendar Sync AI Agent")
+st.caption("🤖 Powered by LangChain with Human-in-the-Loop")
+
 st.markdown("""
 <div style="text-align: center; margin: 1rem 0;">
     <span class="calendar-badge badge-outlook">📧 Outlook</span>
@@ -179,51 +153,44 @@ all_configured = all(config_status.values())
 if not all_configured:
     missing = [k for k, v in config_status.items() if not v]
     st.warning(f"⚠️ Incomplete setup: {', '.join(missing).title()} not configured")
-    with st.expander("📖 Setup Instructions", expanded=False):
-        st.markdown("""
-        ### Outlook Calendar Setup
-        1. Register app in Azure Portal
-        2. Add `OUTLOOK_CLIENT_ID` and `OUTLOOK_CLIENT_SECRET` to `.env`
-        3. See setup guide for detailed instructions
-        
-        ### Google Calendar Setup
-        1. Download `credentials.json` from Google Cloud Console
-        2. Place in project root directory
-        
-        ### TherapyAppointment Setup
-        1. Add `THERAPY_APPOINTMENT_EMAIL` and `THERAPY_APPOINTMENT_PASSWORD` to `.env`
-        """)
 
 # Welcome message
 if st.session_state.show_welcome and not st.session_state.messages:
     with st.chat_message("assistant"):
         st.markdown("""
-        👋 Hi! I'm your Multi-Calendar Sync AI Agent. I can help you:
+        👋 Hi! I'm your **LangChain-powered** Calendar Sync AI Agent with **Human-in-the-Loop**.
         
-        **📧 Outlook Calendar**
-        - View Outlook events
-        - Export to other calendars
+        **🎯 Key Feature: You stay in control!**
         
-        **📅 Google Calendar**
-        - View Google events
-        - Import from Outlook
-        - Sync to TherapyAppointment
-        
-        **🗓️ TherapyAppointment**
-        - Block busy times automatically
-        - Prevent double-bookings
+        When syncing to TherapyAppointment, I'll:
+        1. Show you a numbered list of all events
+        2. Ask which ones you want to block
+        3. Only sync what you approve ✅
         
         ### Quick Commands:
         - "Show my Outlook calendar"
         - "Sync Outlook to Google"
-        - "Sync everything to TherapyAppointment"
-        - "What's on all my calendars?"
+        - **"Sync Google to TherapyAppointment"** ← Uses HITL!
+        - "Show all my calendars"
+        
+        ### How HITL Works:
+        When you ask to sync to TherapyAppointment, I'll show you:
+        ```
+        1. Team Meeting - Dec 5 at 2:30 PM
+        2. Client Session - Dec 6 at 10:00 AM
+        3. Lunch Break - Dec 6 at 12:00 PM
+        ```
+        Then you respond: `1,2` or `all` or `none`
         """)
 
 # Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        
+        # Highlight HITL approval requests
+        if message["role"] == "assistant" and "Which events would you like me to block" in message["content"]:
+            st.session_state.awaiting_selection = True
 
 # Chat input
 if prompt := st.chat_input("Message Calendar Sync Agent..."):
@@ -245,6 +212,13 @@ if prompt := st.chat_input("Message Calendar Sync Agent..."):
                     if response:
                         st.markdown(response)
                         st.session_state.messages.append({"role": "assistant", "content": response})
+                        
+                        # Check if this is an approval request
+                        if "Which events would you like me to block" in response:
+                            st.session_state.awaiting_selection = True
+                        elif st.session_state.awaiting_selection:
+                            # User just responded to selection
+                            st.session_state.awaiting_selection = False
                     else:
                         error_msg = "Unable to process request."
                         st.error(error_msg)
@@ -257,6 +231,15 @@ if prompt := st.chat_input("Message Calendar Sync Agent..."):
 # Sidebar
 with st.sidebar:
     st.header("🎛️ Quick Actions")
+    
+    # Show HITL status
+    if st.session_state.awaiting_selection:
+        st.markdown("""
+        <div class="hitl-box">
+            <strong>⏳ Awaiting Your Selection</strong><br/>
+            Type event numbers or 'all' in the chat
+        </div>
+        """, unsafe_allow_html=True)
     
     # Outlook actions
     st.subheader("📧 Outlook")
@@ -301,29 +284,19 @@ with st.sidebar:
             st.rerun()
     
     with col2:
-        if st.button("→ Therapy", key="google_to_therapy", use_container_width=True, disabled=not (config_status['google'] and config_status['therapy'])):
+        if st.button("→ Therapy", key="google_to_therapy", use_container_width=True, 
+                    disabled=not (config_status['google'] and config_status['therapy']) or st.session_state.awaiting_selection):
             prompt = "Sync my Google Calendar to TherapyAppointment"
             st.session_state.messages.append({"role": "user", "content": prompt})
             try:
                 response = run_async(st.session_state.agent.chat(prompt))
                 if response:
                     st.session_state.messages.append({"role": "assistant", "content": response})
+                    if "Which events would you like me to block" in response:
+                        st.session_state.awaiting_selection = True
             except Exception as e:
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {str(e)}"})
             st.rerun()
-    
-    # Full sync
-    st.subheader("🔄 Full Sync")
-    if st.button("📧→📅→🗓️ Sync All", type="primary", use_container_width=True, disabled=not all_configured):
-        prompt = "Sync Outlook to Google, then sync Google to TherapyAppointment"
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        try:
-            response = run_async(st.session_state.agent.chat(prompt))
-            if response:
-                st.session_state.messages.append({"role": "assistant", "content": response})
-        except Exception as e:
-            st.session_state.messages.append({"role": "assistant", "content": f"Error: {str(e)}"})
-        st.rerun()
     
     st.divider()
     
@@ -332,6 +305,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.agent = initialize_agent()
         st.session_state.show_welcome = True
+        st.session_state.awaiting_selection = False
         st.rerun()
     
     st.divider()
@@ -354,47 +328,63 @@ with st.sidebar:
     st.divider()
     
     # Help section
-    with st.expander("💡 Example Commands"):
+    with st.expander("💡 HITL Examples"):
         st.markdown("""
-        **View Events:**
-        - "What's on my Outlook calendar?"
-        - "Show Google calendar for next 3 days"
-        - "What do I have scheduled?"
+        **Scenario: Sync with approval**
         
-        **Sync Calendars:**
-        - "Sync Outlook to Google"
-        - "Copy my Outlook events to Google"
-        - "Sync Google to TherapyAppointment"
+        You: "Sync Google to TherapyAppointment"
         
-        **Full Workflow:**
-        - "Sync everything"
-        - "Update all my calendars"
-        - "Do a full calendar sync"
+        Agent shows:
+        ```
+        1. Team Meeting - Dec 5 at 2:30 PM
+        2. Client Session - Dec 6 at 10:00 AM  
+        3. Personal Errand - Dec 6 at 3:00 PM
+        ```
         
-        **General Chat:**
-        - "How does the syncing work?"
-        - "What calendars do you support?"
-        - "Help me understand the sync flow"
+        **Your options:**
+        - `1,2` - Only sync events 1 and 2
+        - `all` - Sync all events
+        - `none` - Cancel sync
+        - `1,2,3` - Sync specific events
         """)
     
-    with st.expander("📖 Setup Guide"):
+    with st.expander("🧠 About LangChain"):
         st.markdown("""
-        **Outlook Setup:**
-        1. Register app in Azure Portal
-        2. Get Client ID and Secret
-        3. Add to `.env` file
+        **This agent uses:**
         
-        **Google Setup:**
-        1. Create project in Google Cloud Console
-        2. Enable Calendar API
-        3. Download `credentials.json`
+        ✅ **LangChain Framework**
+        - `ChatOllama` - Local LLM (Llama 3.1)
+        - `AgentExecutor` - Tool orchestration
+        - `StructuredTool` - Type-safe tools
+        - No external memory needed (Streamlit handles chat history)
         
-        **TherapyAppointment:**
-        1. Add credentials to `.env`
+        ✅ **Human-in-the-Loop**
+        - Custom middleware
+        - Approval workflow
+        - User control over syncing
         
-        See documentation for detailed steps.
+        ✅ **Multi-Calendar Integration**
+        - Google Calendar API
+        - Microsoft Graph API
+        - Playwright automation
+        """)
+    
+    with st.expander("📖 Why LangChain over CrewAI?"):
+        st.markdown("""
+        **LangChain** was chosen because:
+        
+        1. **Single-agent pattern** - One intelligent agent with multiple tools
+        2. **Tool orchestration** - Perfect for API integrations
+        3. **Memory management** - Built-in conversation history
+        4. **HITL support** - Easy to implement approval workflows
+        
+        **CrewAI** would be overkill:
+        - Designed for multi-agent collaboration
+        - More complex for simple tool-calling
+        - Not needed for sequential workflows
         """)
     
     st.divider()
-    st.caption("💬 Built with Streamlit, Ollama & Microsoft Graph")
+    st.caption("💬 Built with LangChain, Ollama & Playwright")
     st.caption("🔒 All data stays local and secure")
+    st.caption("✅ Human-in-the-Loop for safety")
