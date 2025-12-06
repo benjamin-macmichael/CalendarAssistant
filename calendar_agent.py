@@ -517,26 +517,31 @@ class CalendarSyncAgentWithHITL:
             handle_parsing_errors=True,
             max_iterations=3,
             early_stopping_method="generate",
-            return_intermediate_steps=True,  # Enable intermediate steps
+            return_intermediate_steps=True,
             agent_kwargs={
                 "prefix": """You are a helpful calendar management AI assistant for therapists.
 
-You help sync calendars across three platforms:
-- Outlook Calendar
-- Google Calendar  
-- TherapyAppointment (for blocking busy times)
+    You help sync calendars across three platforms:
+    - Outlook Calendar
+    - Google Calendar  
+    - TherapyAppointment (for blocking busy times)
 
-CRITICAL: When user wants to sync to TherapyAppointment:
-1. Call 'request_sync_approval' tool
-2. IMMEDIATELY STOP after that tool returns - output its result and wait
-3. DO NOT call any other tools
-4. DO NOT try to sync events yourself
+    CRITICAL RULES:
+    1. ONLY do what the user explicitly asks - do not anticipate or suggest additional actions
+    2. If user asks to "show" or "view" events, ONLY call the appropriate get_events tool
+    3. If user asks to "sync", then perform the sync operation
+    4. When syncing to TherapyAppointment: call 'request_sync_approval', then STOP immediately
+    5. DO NOT chain multiple operations unless explicitly requested
 
-For other operations (viewing calendars, syncing Outlook to Google), proceed normally.
+    Examples:
+    - "show my outlook events" → ONLY call get_outlook_events
+    - "sync outlook to google" → ONLY call sync_outlook_to_google  
+    - "sync to therapy" → call request_sync_approval then STOP
+    - "sync outlook to google, then google to therapy" → call sync_outlook_to_google, then request_sync_approval, then STOP
 
-Be concise and natural.
+    Be concise and natural. Follow user instructions literally.
 
-You have access to the following tools:"""
+    You have access to the following tools:"""
             }
         )
     

@@ -4,28 +4,63 @@ An AI-powered chatbot that helps therapists sync their Outlook, Google, and Ther
 
 ## 🎯 Project Overview
 
-Since TherapyAppointment doesn't offer a public API, this agent uses **Playwright browser automation** to interact with the web interface. This is a real-world solution that demonstrates:
-- Agentic AI decision-making
-- Natural language interaction with LLMs
-- Browser automation for platforms without APIs
-- Multi-system integration
+An intelligent calendar management agent built with **LangChain** that helps therapists coordinate their Outlook, Google, and TherapyAppointment calendars. Features **Human-in-the-Loop (HITL)** approval for sensitive operations.
+
+Key Technologies:
+- **LangChain** - Agent orchestration and tool management
+- **Ollama/Llama 3.1** - Local LLM for decision-making
+- **Playwright** - Browser automation for TherapyAppointment (no API available)
+- **Human-in-the-Loop** - Manual approval before syncing to TherapyAppointment
+- **Multi-calendar integration** - Google Calendar API, Microsoft Graph API
 
 ## Features
 
-- 💬 **Natural Language Interface** - Chat with the AI to sync calendars
-- 🔄 **Automated Syncing** - Blocks TherapyAppointment times based on Google Calendar events
-- 🌐 **Browser Automation** - Uses Playwright to control TherapyAppointment web interface
-- 📊 **Event Viewing** - Ask about upcoming appointments
-- 🧠 **LLM-Powered** - Uses Ollama with function calling for intelligent interactions
+- 💬 **Natural Language Interface** - Chat with the AI using plain English
+- 🔄 **Multi-Calendar Syncing** - Outlook → Google → TherapyAppointment
+- ✅ **Human-in-the-Loop** - Approve which events to sync before automation runs
+- 🤖 **LangChain Agent** - Intelligent tool selection and orchestration
+- 🌐 **Browser Automation** - Playwright controls TherapyAppointment web interface
+- 📊 **Event Viewing** - View events from any connected calendar
+- 🧠 **Local LLM** - Runs entirely on your machine with Ollama
+
+## How It Works
+
+### Agent Architecture
+This project uses **LangChain's agent framework** with custom tools:
+
+1. **Tools Available to Agent:**
+   - `get_google_events` - Retrieve Google Calendar events
+   - `get_outlook_events` - Retrieve Outlook Calendar events
+   - `sync_outlook_to_google` - One-way sync with duplicate detection
+   - `request_sync_approval` - Show events and request user approval
+
+2. **Human-in-the-Loop Workflow:**
+```
+   User: "Sync my calendars to TherapyAppointment"
+   ↓
+   Agent calls request_sync_approval tool
+   ↓
+   Shows numbered list of events
+   ↓
+   User responds: "1,3,5" or "all"
+   ↓
+   Agent syncs only approved events
+```
+
+3. **Browser Automation:**
+   - Playwright logs into TherapyAppointment
+   - Navigates to availability settings
+   - Blocks selected time slots
+   - All controlled programmatically
 
 ## Quick Start
 
 ### Prerequisites
 - Python 3.8+
-- Ollama installed
+- Ollama installed with **llama3.1** model (or llama3.2)
 - TherapyAppointment account
-- Google Calendar
-- Outlook Calendar
+- Google Calendar with API access
+- Microsoft 365/Outlook Calendar
 
 ### Installation
 
@@ -44,6 +79,8 @@ playwright install
 3. **Install and setup Ollama**
 ```bash
 # Download from https://ollama.com
+ollama pull llama3.1  # Recommended for LangChain agents
+# OR for smaller memory footprint:
 ollama pull llama3.2:3b
 ```
 
@@ -222,26 +259,37 @@ calendarassistant/
 
 ## Key Features Explained
 
-### 1. 1. AI-Powered Interaction
-The LLM (Ollama) understands natural language and decides when to call functions:
-- "Sync my calendar" → Calls sync_calendars()
-- "What's on my calendar tomorrow?" → Calls get_upcoming_events()
-- "Tell me about therapy modalities" → Just responds conversationally (no function call)
-- The agent intelligently knows when to use tools vs. when to just chat
+### 1. LangChain Agent with HITL
+The agent uses **LangChain's ReAct pattern**:
+- Thinks step-by-step about what tools to use
+- Follows explicit rules (only do what user asks)
+- Supports **Human-in-the-Loop** for sensitive operations
+- Manual state tracking for approval workflows
 
-### 2. Browser Automation
-Playwright controls a real browser to:
-- Login to TherapyAppointment
-- Navigate to availability settings
-- Fill out forms to block times
-- Handle dynamic content and JavaScript
+**Example interaction:**
+```
+User: "Sync outlook to google, then google to therapy"
 
-### 3. Smart Syncing
-- Only syncs time-based events (skips all-day events)
-- Customizable sync window (default: 7 days ahead)
-- Maintains event privacy (only blocks times, not details)
+Agent reasoning:
+1. Calls sync_outlook_to_google tool
+2. Calls request_sync_approval tool
+3. STOPS and waits for human input
+4. User selects events
+5. Python directly syncs (bypasses agent for safety)
+```
 
-## Configuration Options
+### 2. Browser Automation (No API Needed)
+Since TherapyAppointment lacks a public API, Playwright:
+- Controls a real Chromium browser
+- Logs in and navigates the web interface
+- Fills forms to block availability
+- Handles dynamic JavaScript content
+
+### 3. Smart Multi-Calendar Syncing
+- **Outlook → Google:** Automatic with duplicate detection
+- **Google → TherapyAppointment:** With human approval
+- Only syncs time-based events (skips all-day)
+- Customizable sync window (default: 7 days)
 
 ### Environment Variables
 
@@ -250,15 +298,22 @@ Playwright controls a real browser to:
 THERAPY_APPOINTMENT_EMAIL=your_email@example.com
 THERAPY_APPOINTMENT_PASSWORD=your_password
 THERAPY_APPOINTMENT_URL=https://www.therapyappointment.com
+OUTLOOK_CLIENT_ID=your_client_id
+OUTLOOK_TENANT_ID=common  
 ```
 
 ### Model Selection
-The default model is llama3.2:3b which uses only ~2GB of RAM. You can change it in calendar_agent.py
-Recommended models:
+The default model is **llama3.1** which is optimized for agent workflows and function calling.
 
-- llama3.2:3b - Smallest, fastest, good for function calling (~2GB)
-- llama3.1:8b - More capable, needs more memory (~4.7GB)
-- mistral - Alternative, good at function calling (~4.5GB)
+Available in `CalendarSyncAgentWithHITL.__init__()`:
+```python
+def __init__(self, model_name: str = "llama3.1"):
+```
+
+**Recommended models:**
+- `llama3.1` - Best for agents, 4.7GB RAM
+- `llama3.1:8b` - Same as above (alias)
+- `llama3.2:3b` - Lighter weight, 2GB RAM, slightly less capable
 
 ## Troubleshooting
 
@@ -295,6 +350,22 @@ PWDEBUG=1 python calendar_agent.py
 # Edit code: slow_mo=1000 in browser.launch()
 ```
 
+### LangChain/Agent Issues
+
+**Agent doing too much or too little**
+- Check the system prompt in `_create_agent()` 
+- Adjust `max_iterations` (default: 3)
+- Review agent's verbose output for reasoning
+
+**HITL not working**
+- Check `hitl.is_awaiting_approval()` state
+- Verify Streamlit detects approval request (looks for 📋 emoji)
+- Clear Streamlit cache: `st.cache_resource.clear()`
+
+**"Pydantic validation error"**
+- Ensure using `Tool` not `StructuredTool`
+- Don't use `args_schema` with `initialize_agent`
+
 ### Adding New Functions
 
 To add new capabilities (e.g., analytics), add to the `tools` list in `chat()`:
@@ -315,22 +386,32 @@ Then implement the function in the `CalendarSyncAgent` class.
 ### Dependencies
 Key packages (see requirements.txt for complete list):
 
-- ollama
-- google-auth-oauthlib
-- google-auth-httplib2
-- google-api-python-client
-- playwright
-- python-dotenv
-- streamlit
-- nest-asyncio
-- msal
-- requests
+**LangChain Stack:**
+- `langchain` - Agent framework
+- `langchain-community` - Community integrations (ChatOllama)
+
+**Calendar APIs:**
+- `google-auth-oauthlib`, `google-api-python-client`
+- `msal` (Microsoft Authentication Library)
+
+**Automation:**
+- `playwright` - Browser automation
+- `ollama` - Local LLM interface
+
+**Web Interface:**
+- `streamlit` - Web UI
+- `nest-asyncio` - Async support in Streamlit
+
+**Utilities:**
+- `python-dotenv`, `requests`
 
 ## Resources
 
+- [LangChain Documentation](https://python.langchain.com/)
+- [LangChain Agents](https://python.langchain.com/docs/modules/agents/)
 - [Playwright Documentation](https://playwright.dev/python/)
 - [Ollama Documentation](https://ollama.ai/docs)
 - [Google Calendar API](https://developers.google.com/calendar)
-- [Function Calling with LLMs](https://docs.ollama.ai/api#function-calling)
+- [Microsoft Graph API](https://learn.microsoft.com/en-us/graph/api/resources/calendar)
 
 ---
